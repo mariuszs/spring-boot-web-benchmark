@@ -4,6 +4,7 @@ import com.devskiller.boot.bench.api.FooService;
 import org.springframework.remoting.caucho.HessianProxyFactoryBean;
 import org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean;
 
+
 public class ProxyFactoryBeanHelper {
 
     public static HessianProxyFactoryBean hessianProxyFactoryBean(int port) {

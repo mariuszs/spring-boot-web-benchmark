@@ -5,6 +5,8 @@ import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import com.devskiller.boot.bench.api.Foo;
 import com.devskiller.boot.bench.api.FooRequest;
 import com.devskiller.boot.bench.api.FooService;
+import com.devskiller.boot.bench.config.Hessian;
+import com.devskiller.boot.bench.config.HttpInvoker;
 import com.devskiller.boot.bench.config.TestConfig;
 import org.junit.*;
 import org.junit.rules.TestRule;
@@ -23,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-@IntegrationTest({"server.port=0", "management.port=0"})
+@IntegrationTest({"management.port=0"})
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {Application.class, TestConfig.class})
@@ -36,7 +38,12 @@ public class TransportBenchmark extends AbstractBenchmark {
     private FooService fooService;
 
     @Autowired
-    private FooService fooClient;
+    @Hessian
+    private FooService hessianClient;
+
+    @Autowired
+    @HttpInvoker
+    private FooService httpInvokerClient;
 
     private static final int COUNT = 500;
     private static RestTemplate restTemplate = new RestTemplate();
@@ -49,12 +56,22 @@ public class TransportBenchmark extends AbstractBenchmark {
     }
 
     @Test
+    public void HTTP_Invoker() {
+
+        for (int i = 0; i < COUNT; i++) {
+            String id = httpInvokerClient.create(fooRequest);
+            httpInvokerClient.get(id);
+            httpInvokerClient.delete(id);
+        }
+    }
+
+    @Test
     public void Hessian() {
 
         for (int i = 0; i < COUNT; i++) {
-            String id = fooClient.create(fooRequest);
-            fooClient.get(id);
-            fooClient.delete(id);
+            String id = hessianClient.create(fooRequest);
+            hessianClient.get(id);
+            hessianClient.delete(id);
         }
     }
 

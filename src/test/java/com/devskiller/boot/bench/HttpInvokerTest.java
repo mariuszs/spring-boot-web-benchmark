@@ -3,7 +3,7 @@ package com.devskiller.boot.bench;
 import com.devskiller.boot.bench.api.Foo;
 import com.devskiller.boot.bench.api.FooRequest;
 import com.devskiller.boot.bench.api.FooService;
-import com.devskiller.boot.bench.config.Hessian;
+import com.devskiller.boot.bench.config.HttpInvoker;
 import com.devskiller.boot.bench.config.TestConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,10 +22,10 @@ import static org.assertj.core.api.BDDAssertions.then;
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {Application.class, TestConfig.class})
-public class HessianTest {
+public class HttpInvokerTest {
 
     @Autowired
-    @Hessian
+    @HttpInvoker
     private FooService fooClient;
 
     @Test

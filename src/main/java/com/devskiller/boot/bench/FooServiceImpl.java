@@ -4,6 +4,7 @@ import com.devskiller.boot.bench.api.Bar;
 import com.devskiller.boot.bench.api.Foo;
 import com.devskiller.boot.bench.api.FooRequest;
 import com.devskiller.boot.bench.api.FooService;
+import com.devskiller.boot.bench.config.Local;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.UUID;
 
 @RestController("fooService")
 @RequestMapping("/foo")
+@Local
 public class FooServiceImpl implements FooService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FooServiceImpl.class);

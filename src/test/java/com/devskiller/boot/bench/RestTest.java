@@ -16,10 +16,10 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.BDDAssertions.then;
 
-@IntegrationTest({"server.port=0", "management.port=0"})
-@WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = {Application.class})
+@WebAppConfiguration
+@IntegrationTest({"server.port=0", "management.port=0"})
 public class RestTest {
 
     private String url;

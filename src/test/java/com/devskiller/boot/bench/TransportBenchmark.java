@@ -5,19 +5,23 @@ import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import com.devskiller.boot.bench.api.Foo;
 import com.devskiller.boot.bench.api.FooRequest;
 import com.devskiller.boot.bench.api.FooService;
-import com.devskiller.boot.bench.config.Hessian;
-import com.devskiller.boot.bench.config.HttpInvoker;
-import com.devskiller.boot.bench.config.TestConfig;
-import org.junit.*;
+import com.devskiller.boot.bench.config.Local;
+import com.devskiller.boot.bench.config.ProxyFactoryBeanHelper;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.remoting.caucho.HessianProxyFactoryBean;
+import org.springframework.remoting.httpinvoker.HttpInvokerProxyFactoryBean;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestTemplate;
@@ -25,35 +29,32 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.util.Arrays;
 
-@IntegrationTest({"management.port=0"})
-@WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {Application.class, TestConfig.class})
+@SpringApplicationConfiguration(classes = Application.class)
+@WebAppConfiguration
+@IntegrationTest({"server.port=0", "management.port=0"})
 public class TransportBenchmark extends AbstractBenchmark {
 
     @Rule
     public TestRule benchmarkRun = new BenchmarkRule();
 
+    @Value("${local.server.port}")
+    private int port;
+
     @Autowired
+    @Local
     private FooService fooService;
 
     @Autowired
-    @Hessian
-    private FooService hessianClient;
-
-    @Autowired
-    @HttpInvoker
     private FooService httpInvokerClient;
 
-    private static final int COUNT = 500;
+    @Autowired
+    private FooService hessianClient;
+
+    private static final int COUNT = 100;
     private static RestTemplate restTemplate = new RestTemplate();
     private FooRequest fooRequest = new FooRequest("foo", 1, BigDecimal.ZERO);
     private final HttpHeaders headers = new HttpHeaders();
-
-    @After
-    public void shutdown(){
-        System.out.println(fooService.mapSize());
-    }
 
     @Test
     public void HTTP_Invoker() {
@@ -109,11 +110,21 @@ public class TransportBenchmark extends AbstractBenchmark {
     }
 
     private void runCreateGetAndDelete() {
-        String id = restTemplate.exchange("http://localhost:8080/foo", HttpMethod.POST, new HttpEntity<>(new FooRequest(), headers), String.class).getBody();
-        restTemplate.exchange("http://localhost:8080/foo/{id}", HttpMethod.GET, new HttpEntity(headers), Foo.class, id).getBody();
-        restTemplate.exchange("http://localhost:8080/foo/{id}", HttpMethod.DELETE, new HttpEntity<FooRequest>(headers), Void.class, id);
+        String url = String.format("http://localhost:%s/foo", port);
+        String id = restTemplate.exchange(url, HttpMethod.POST, new HttpEntity<>(new FooRequest(), headers), String.class).getBody();
+        restTemplate.exchange(url + "/{id}", HttpMethod.GET, new HttpEntity(headers), Foo.class, id).getBody();
+        restTemplate.exchange(url + "/{id}", HttpMethod.DELETE, new HttpEntity<FooRequest>(headers), Void.class, id);
     }
 
+    @Bean
+    public HttpInvokerProxyFactoryBean hessianClient() {
+        return ProxyFactoryBeanHelper.httpInvokerProxyFactoryBean(port);
+    }
+
+    @Bean
+    public HessianProxyFactoryBean httpInvokerClient() {
+        return ProxyFactoryBeanHelper.hessianProxyFactoryBean(port);
+    }
 
 }
 
